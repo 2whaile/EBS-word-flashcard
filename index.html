@@ -2,6 +2,13 @@
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>영단어 플래시카드</title>
+<meta name="theme-color" content="#ef6a3a" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111319" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="단어 카드">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAC6ElEQVR42u3csU3DUBCAYfLEAOmYgZoOJAZgBiYI1GmoaajJBszAAEgpqTMDFRmBBtEQR4kTO+/eff8CEN/ne3YkmHzPrs+kTRWXQHAIDsEhOASH4BAcgkNwCA4JDsEhOASH4BAcgkNwCA7BIcEhOASH4BAcgkNwCA7BITgkOASH9u88xG85fXxpewzr13mFv9Wk5n/71LyJypUUMnzqSJsjJ4sKV0ghwwqJgYOMqq6GV1lFwGFt1HZNankg/b0KlzeNT3u1DPRwWsWXYNPFMssq+NO/CvCRCxknVlJxpzxWkrLoddCc5GQpZFghdeEgI4QP33OoJhzWRpTlUcjgw7EiOBQUhzMl1slicwgOwSE4BIfgEByCQ3A00MXzPQFwdMrgA45tO4MPOARHr0cNywOObQ74yI5juwA+8uLYZfZ8ZMSx+9T58LYiOHotA8sjC45+k+ajfRyHzJiPQgYfHkgFx7Fv+szLo5DBRyIcQ8wyp49CBh8pcAw9v2w+vK0oAY5xbutUy6OQwUdX5218jK+nN6eAzSE4BIfgEByCQ3AIDgkOwSE4BIfgEByCQ3AIDsEhwSE4BIfg0Alq5E8TPm/vxvxxVx/vNkeYxpxWEhlNHSvjzCyPDM8cSoNj6Ns61dpocHMMN79sMto8VoaYYkIZzT5zHHeWOWW0/EB6rImmleFtRVlxHH7TZ14b7W+OQ6abXEaKY6XfjMnI8syx76TJ8EAqOPZcBtZGxs2xy9TJyHusbJ89GdmfOboEkAHHZgdkwCE49lwe1gYcm32QAYfXEzgabf06h0M2h+BQ6DMFDjLgEBzWBhxkjNTke3Y95s+bLpYG39lqWQkLm8PCgIOMKDjWDzcQRLkyxVUgw7GiIDgsjxBXo7giZHQ19vcc/0v7zUf9t0dxjXzqejdHqi0S606oC4ccK4JDcAgOwSHBITgEh+AQHIJDcAgOwSE4JDgEh+AQHIJDcAgOwSE4BIfgkOAQHDpCP6SByEovbX3MAAAAAElFTkSuQmCC">
 <style>
 :root{--bg:#f5f6fa;--cd:#fff;--tx:#171922;--mu:#6c7280;--ln:#e5e8ef;--ac:#ef6a3a;--ok:#16845b;--okb:#e8f7f0;--bd:#cc3d49;--bdb:#fff0f2;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111319;--cd:#191c24;--tx:#f3f4f7;--mu:#a4aab7;--ln:#2b303b;--ac:#ff7a47;--ok:#58c99a;--okb:#18382c;--bd:#ff7b85;--bdb:#3b2025;color-scheme:dark}}
@@ -59,6 +66,7 @@ p.s{margin:0;color:var(--mu);font-size:14px}
 <p class="s">EBS MASTER 2027 단어 · 매번 섞어서 출제해요</p>
 <div class="box"><h2>출제 개수</h2><div class="row"><span id="chips" class="row"></span><input id="num" type="number" min="1" max="500" inputmode="numeric"></div></div>
 <div class="box"><h2>범위 (교재)</h2><div id="bks"></div></div>
+<div class="box"><h2>복습</h2><label class="bk"><input type="checkbox" id="pr">틀렸던 단어 우선 출제<span id="wc"></span></label><button class="chip" id="wclr">저장된 틀린 단어 비우기</button></div>
 <p class="s" id="pc"></p>
 <button class="big" id="go">시작</button>
 <p class="s">카드를 위로 밀면 알아(+), 아래로 밀면 몰라(−). 밀면 뜻이 바로 아래에 나와요.</p>
@@ -88,9 +96,12 @@ const BK=['수능특강 영어','수능특강 영어독해연습','수능완성 
 const $=s=>document.querySelector(s);
 const cl=s=>s.replace(/(?:\d+\s*)?본문\s*\d+\s*~\s*\d+\s*쪽/g,'').replace(/\b\d+\s*~\s*\d+\b/g,'').replace(/\(\s*pl\s*\.[^)]*\)/g,'').replace(/\bpl\s*\.\s*[A-Za-z]+/g,'').replace(/\bE\s*xercise\b/g,'').split('/').map(p=>p.replace(/\s+/g,' ').trim()).filter(Boolean).join(' / ');
 const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-let cfg={n:30,m:7};
-try{const s=JSON.parse(localStorage.getItem('fc')||'{}');if(s.n)cfg.n=s.n;if(s.m)cfg.m=s.m}catch(e){}
+let cfg={n:30,m:7,p:1};
+try{const s=JSON.parse(localStorage.getItem('fc')||'{}');if(s.n)cfg.n=s.n;if(s.m)cfg.m=s.m;if(s.p===0)cfg.p=0}catch(e){}
 const save=()=>{try{localStorage.setItem('fc',JSON.stringify(cfg))}catch(e){}};
+let WS={};try{WS=JSON.parse(localStorage.getItem('fcw')||'{}')}catch(e){}
+const saveW=()=>{try{localStorage.setItem('fcw',JSON.stringify(WS))}catch(e){}};
+const wrongList=()=>W.filter(w=>WS[w[0]]);
 const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 const show=id=>{['setup','play','res'].forEach(x=>$('#'+x).hidden=x!==id);window.scrollTo(0,0)};
 const pool=()=>W.filter(w=>w[2]&cfg.m);
@@ -102,13 +113,17 @@ function setup(){
  const p=pool().length;
  $('#pc').textContent=p?`범위 ${p}개 중 ${Math.min(cfg.n,p)}개를 섞어서 출제`:'교재를 하나 이상 골라줘';
  $('#go').disabled=!p;
+ $('#pr').checked=!!cfg.p;$('#wc').textContent=wrongList().length+'개';
 }
 $('#chips').onclick=e=>{const n=e.target.dataset.n;if(n){cfg.n=+n;save();setup()}};
 $('#num').oninput=e=>{const n=Math.max(1,Math.min(500,+e.target.value||1));cfg.n=n;save();
  $('#chips').querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',+c.dataset.n===n));
  const p=pool().length;$('#pc').textContent=p?`범위 ${p}개 중 ${Math.min(cfg.n,p)}개를 섞어서 출제`:'교재를 하나 이상 골라줘'};
 $('#bks').onchange=e=>{const i=+e.target.dataset.i;cfg.m=e.target.checked?cfg.m|1<<i:cfg.m&~(1<<i);save();setup()};
-$('#go').onclick=()=>{round=1;begin(shuf(pool()).slice(0,cfg.n))};
+$('#pr').onchange=e=>{cfg.p=e.target.checked?1:0;save()};
+let ar=0;$('#wclr').onclick=e=>{const b=e.target;if(!ar){ar=1;b.textContent='한 번 더 누르면 삭제';setTimeout(()=>{ar=0;b.textContent='저장된 틀린 단어 비우기'},3000)}else{WS={};saveW();ar=0;b.textContent='저장된 틀린 단어 비우기';setup()}};
+$('#go').onclick=()=>{round=1;const r=cfg.p?shuf(wrongList()).slice(0,Math.ceil(cfg.n/2)):[];const have=new Set(r.map(w=>w[0]));
+ const rest=shuf(pool().filter(w=>!have.has(w[0]))).slice(0,cfg.n-r.length);begin(r.concat(rest))};
 
 let L=[],R=[],i=0,round=1,busy=false;
 const c=$('#card');
@@ -147,7 +162,8 @@ document.addEventListener('keydown',e=>{if($('#play').hidden)return;
 let flt='a';
 function finish(){
  const ok=R.filter(Boolean).length,bad=L.length-ok;
- $('#sum').innerHTML=`${ok} / ${L.length}<small>${bad?`틀린 단어 ${bad}개`:'전부 맞았어!'}</small>`;
+ L.forEach((w,k)=>{const e=WS[w[0]];if(!R[k])WS[w[0]]={n:(e?e.n:0)+1,s:0};else if(e){e.s++;if(e.s>=2)delete WS[w[0]]}});saveW();
+ $('#sum').innerHTML=`${ok} / ${L.length}<small>${bad?`틀린 단어 ${bad}개`:'전부 맞았어!'} · 복습 대기 ${Object.keys(WS).length}개</small>`;
  $('#retry').hidden=!bad;$('#retry').textContent=`틀린 것만 다시 (${bad})`;
  flt='a';list();show('res');
 }
